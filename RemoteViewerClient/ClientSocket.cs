@@ -9,12 +9,14 @@ using System.Threading.Tasks;
 namespace RemoteViewerClient {
 	class ClientSocket {
 
-		static string m_ip = null;
-		static int m_port = 0;
-		Thread m_thread = null;
-		static TcpClient m_tc = null;
+		string m_ip = null;
+		int m_port = 0;
+		private Thread m_conn_thread = null;
+		private Thread m_recv_thread = null;
+		private TcpClient m_tc = null;
 		public delegate void recv_callback( byte[] _data, int _size );
-		static recv_callback m_recv_callback;
+		private recv_callback m_recv_callback;
+		private bool m_thread_stop_flag = false;
 
 		public ClientSocket( recv_callback _recv_callback = null ) {
 			m_recv_callback = _recv_callback;
@@ -28,28 +30,45 @@ namespace RemoteViewerClient {
 				m_ip = _ip;
 				m_port = _port;
 
-				m_tc = new TcpClient( _ip, _port );
-				if( m_tc.Connected == true ) {
-					//m_recv_callback?.Invoke( string.Format( "Connect to server, success" ) );
-
-					ThreadStart ts = new ThreadStart( thread_proc_on_recv );
-					m_thread = new Thread( ts );
-					m_thread.Start();
-				}
+				m_conn_thread = new Thread( new ParameterizedThreadStart( thread_proc_connect ) );
+				m_conn_thread.Start( this );
 			}
 			catch( Exception ex ) {
+				Console.WriteLine( ex.Message );
 				throw ex;
 			}			
 		}
 
+		private static void thread_proc_connect( object _obj ) {
+			try {
+				ClientSocket cs = ( ClientSocket )_obj;
+
+				cs.m_tc = new TcpClient( cs.m_ip, cs.m_port );
+				if( cs.m_tc.Connected == true ) {
+					cs.m_thread_stop_flag = false;
+					cs.m_recv_thread = new Thread( new ParameterizedThreadStart( thread_proc_on_recv ) );
+					cs.m_recv_thread.Name = string.Format( "ClientSocket_RecvThread_{0}", ( ( RemoteViewerClient.RemoteScreen )cs.m_recv_callback.Target )._IDX );
+					cs.m_recv_thread.Start( cs );
+				}
+			}catch( Exception ex ) {
+				Console.WriteLine( ex.Message );
+			}
+		}
+
 		public void disconnect() {
+			m_thread_stop_flag = true;
 
 			if( m_tc != null ) {
 				if( m_tc.Connected == true )
 					m_tc.Client.Disconnect( false );
 				m_tc.Close();
+				m_tc.Dispose();
 			}
-			m_thread?.Abort();
+			m_recv_thread?.Join();
+			m_recv_thread?.Abort();
+
+			m_conn_thread?.Join();
+			m_conn_thread?.Abort();
 		}
 
 		public bool is_connected() {
@@ -59,28 +78,31 @@ namespace RemoteViewerClient {
 			return m_tc.Connected;
 		}
 
-		private static async void thread_proc_on_recv() {
+		private static void thread_proc_on_recv( object _obj ) {
+			ClientSocket cs = ( ClientSocket )_obj;
 			NetworkStream stream = null;
 			while( true ) {
 				try {
-					if( m_tc.Connected == false ) {
-						Thread.Sleep( 100 );
-						continue;
-					}
+					if( cs.m_thread_stop_flag == true )
+						break;
 
-					stream = m_tc.GetStream();
+					stream = cs.m_tc.GetStream();
 
-					// (4) 스트림으로부터 바이트 데이타 읽기
-					byte[] outbuf = new byte[ 102400 ];
-					int nbytes = await stream.ReadAsync( outbuf, 0, outbuf.Length );
-					if( nbytes > 0 ) {
-						//string msg = Encoding.ASCII.GetString( outbuf, 0, nbytes );
-						m_recv_callback?.Invoke( outbuf, nbytes );
+					if( stream.CanRead ) {
+						byte[] bytes = new byte[ 102400 ];
+						stream.Read( bytes, 0, bytes.Length );
+
+						cs.m_recv_callback?.Invoke( bytes, bytes.Length );
 					} else {
-						m_tc.Close();
+						cs.m_tc.Close();
+						stream.Close();
 					}
-				} catch( Exception ) {
+					
+				} catch( Exception ex ) {
+					cs.m_tc.Close();
 					stream.Close();
+					Console.WriteLine( ex.Message );
+					break;
 				}
 			}
 		}
@@ -88,6 +110,7 @@ namespace RemoteViewerClient {
 			try {
 				m_tc.GetStream().WriteAsync( Encoding.ASCII.GetBytes( _msg ), 0, _msg.Length );
 			} catch( Exception ex ) {
+				Console.WriteLine( ex.Message );
 				throw ex;
 			}			
 		}

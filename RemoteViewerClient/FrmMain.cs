@@ -16,5 +16,43 @@ namespace RemoteViewerClient {
 		public FrmMain() {
 			InitializeComponent();
 		}
+
+		private List<RemoteScreen> m_list_rs = new List<RemoteScreen>();
+		private void FrmMain_Load( object sender, EventArgs e ) {
+			List<string> ip_list = new List<string>();
+			ip_list.Add( "192.168.30.35" );
+			ip_list.Add( "192.168.30.36" );
+			ip_list.Add( "192.168.30.37" );
+			ip_list.Add( "192.168.30.38" );
+			ip_list.Add( "192.168.30.39" );
+			ip_list.Add( "192.168.30.40" );
+			ip_list.Add( "192.168.30.41" );
+			ip_list.Add( "192.168.30.42" );
+
+			int idx = 1;
+			foreach( var ip in ip_list ) {
+				RemoteScreen rs = new RemoteScreen();
+				rs._IP = ip;
+				rs._PORT = 54321;
+				rs._IDX = idx++;
+				rs.TopLevel = false;
+
+				try {
+					rs.connect();
+				} catch( Exception ) {
+
+				}
+
+				flowLayoutPanel1.Controls.Add( rs );
+				m_list_rs.Add( rs );
+				rs.Show();
+			}
+		}
+
+		private void FrmMain_FormClosing( object sender, FormClosingEventArgs e ) {
+			foreach( var rs in m_list_rs ) {
+				rs.disconnect();
+			}
+		}
 	}
 }

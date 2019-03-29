@@ -27,31 +27,92 @@ namespace RemoteViewerServer {
 
 			m_port = _port;
 
+
+			m_listener = new TcpListener( IPAddress.Any, m_port );
+			m_listener.Start();
+
 			ThreadStart ts = new ThreadStart( thread_proc_server_run );
 			m_thread = new Thread( ts );
 			m_thread.Start();
-		}
-
-		public void stop() {
-			foreach( var client in m_client_list ) {
-				client.Close();
-				m_client_list.Remove( client );
-			}
-			m_listener?.Stop();
-			m_thread?.Abort();
 		}
 
 		private static void thread_proc_server_run() {
 			while( true ) {
 				Thread.Sleep( 1 );
 				try {
-					if( async_accept().IsCompleted )
-						async_accept().Wait();
-				} catch( Exception ex ) {
-					//m_recv_callback?.Invoke( string.Format( "Server Error : " + ex.Message ) );
+					Accept();
+				} catch( Exception ) {
+					
 				}
 			}
 		}
+
+		private static void Accept() {
+			TcpClient tc = m_listener.AcceptTcpClient();
+			m_client_list.Add( tc );
+			
+			Thread recv_thread = new Thread( new ParameterizedThreadStart( thread_proc_receive ) );
+			recv_thread.Start( tc );
+		}
+
+		private static void thread_proc_receive( object _obj ) {
+			TcpClient tc = ( TcpClient )_obj;
+			NetworkStream stream = null;
+			while( true ) {
+				try {
+					stream = tc.GetStream();
+
+					var buff = new byte[ 1024 ];
+					stream.ReadTimeout = 3000;
+					var nbytes = stream.Read( buff, 0, buff.Length );
+					if( nbytes > 0 ) {
+						m_recv_callback?.Invoke( buff, nbytes );
+					} else {
+						stream.Close();
+						tc.Close();
+						m_client_list.Remove( tc );
+						break;
+					}
+				} catch( Exception ex ) {
+					Console.Write( ex.Message );
+					stream.Close();
+					tc.Close();
+					m_client_list.Remove( tc );
+					break;
+				}
+			}
+		}
+
+		public void stop() {
+			foreach( var client in m_client_list ) {
+				client.Close();
+			}
+			m_client_list.Clear();
+
+			m_listener?.Stop();
+			m_thread?.Abort();
+		}
+
+		public void send( byte[] _data ) {
+			try {
+				foreach( var client in m_client_list ) {
+					client.GetStream().Write( _data, 0, _data.Length );
+				}
+			} catch( Exception ex ) {
+				Console.WriteLine( ex.Message );
+			}
+		}
+
+
+
+
+
+
+
+
+
+
+
 
 		async static Task async_accept() {
 			m_listener = new TcpListener( IPAddress.Any, m_port );
@@ -95,12 +156,6 @@ namespace RemoteViewerServer {
 					break;
 					//m_recv_callback?.Invoke( string.Format( "Receive Error : " + ex.Message ) );
 				}
-			}
-		}
-
-		public void send( byte[] _data ) {
-			foreach( var client in m_client_list ) {
-				client.GetStream().WriteAsync( _data, 0, _data.Length );
 			}
 		}
 	}

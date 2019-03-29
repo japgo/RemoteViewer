@@ -19,10 +19,17 @@ namespace RemoteViewerServer {
 		public FrmMain() {
 			InitializeComponent();
 
-			m_server_sock = new ServerSocket( recv_callback );
-			m_server_sock.start( 54321 );
+			ServerStart( 54321 );
 		}
 
+		void ServerStart( int _port ) {
+			m_server_sock?.stop();
+
+			if( m_server_sock == null )
+				m_server_sock = new ServerSocket( recv_callback );
+
+			m_server_sock.start( _port );
+		}
 		void recv_callback( byte[] _data, int _size ) {
 			string msg = Encoding.ASCII.GetString( _data, 0, _size );
 			if( msg.Contains( "Give me the screen!" ) ) { 
@@ -86,6 +93,10 @@ namespace RemoteViewerServer {
 
 		private void FrmMain_Shown( object sender, EventArgs e ) {
 			this.Hide();
+		}
+
+		private void btnServerStart_Click( object sender, EventArgs e ) {
+			ServerStart( Convert.ToInt32( tbPort.Text ) );
 		}
 	}
 }
