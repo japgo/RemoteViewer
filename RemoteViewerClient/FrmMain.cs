@@ -28,6 +28,9 @@ namespace RemoteViewerClient {
 			ip_list.Add( "192.168.30.40" );
 			ip_list.Add( "192.168.30.41" );
 			ip_list.Add( "192.168.30.42" );
+#if DEBUG
+			ip_list.Add( "127.0.0.1" );
+#endif
 
 			int idx = 1;
 			foreach( var ip in ip_list ) {

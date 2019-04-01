@@ -32,6 +32,8 @@
 			this.btnServerStart = new System.Windows.Forms.Button();
 			this.tbPort = new System.Windows.Forms.TextBox();
 			this.label1 = new System.Windows.Forms.Label();
+			this.listBox1 = new System.Windows.Forms.ListBox();
+			this.timer1 = new System.Windows.Forms.Timer(this.components);
 			this.ContextMenuStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -93,11 +95,26 @@
 			this.label1.TabIndex = 3;
 			this.label1.Text = "Port";
 			// 
+			// listBox1
+			// 
+			this.listBox1.FormattingEnabled = true;
+			this.listBox1.ItemHeight = 12;
+			this.listBox1.Location = new System.Drawing.Point(239, 12);
+			this.listBox1.Name = "listBox1";
+			this.listBox1.Size = new System.Drawing.Size(120, 88);
+			this.listBox1.TabIndex = 4;
+			// 
+			// timer1
+			// 
+			this.timer1.Enabled = true;
+			this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+			// 
 			// FrmMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(229, 97);
+			this.ClientSize = new System.Drawing.Size(664, 245);
+			this.Controls.Add(this.listBox1);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.tbPort);
 			this.Controls.Add(this.btnServerStart);
@@ -105,6 +122,7 @@
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "FrmMain";
 			this.Text = "Remote Viewer Server";
+			this.TransparencyKey = System.Drawing.SystemColors.Control;
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmMain_FormClosing);
 			this.Shown += new System.EventHandler(this.FrmMain_Shown);
 			this.ContextMenuStrip1.ResumeLayout(false);
@@ -122,6 +140,8 @@
 		private System.Windows.Forms.Button btnServerStart;
 		private System.Windows.Forms.TextBox tbPort;
 		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.ListBox listBox1;
+		private System.Windows.Forms.Timer timer1;
 	}
 }
 
