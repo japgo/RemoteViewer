@@ -63,7 +63,7 @@ namespace RemoteViewerServer {
 					stream = tc.GetStream();
 
 					var buff = new byte[ 1024 ];
-					stream.ReadTimeout = 3000;
+					//stream.ReadTimeout = 3000;
 					var nbytes = stream.Read( buff, 0, buff.Length );
 					if( nbytes > 0 ) {
 						m_recv_callback?.Invoke( buff, nbytes );
@@ -103,27 +103,14 @@ namespace RemoteViewerServer {
 			}
 		}
 
-
-
-
-
-
-
-
-
-
-
-
 		async static Task async_accept() {
 			m_listener = new TcpListener( IPAddress.Any, m_port );
 			m_listener.Start();
-			//m_recv_callback?.Invoke( string.Format( "Server Start, success" ) );
 			while( true ) {
 
 				// 비동기 Accept                
 				TcpClient tc = await m_listener.AcceptTcpClientAsync().ConfigureAwait( false );
 				m_client_list.Add( tc );
-				//m_recv_callback?.Invoke( string.Format( "Accept Client" ) );
 
 				// 새 쓰레드에서 처리
 				await Task.Factory.StartNew( thread_proc_on_recv, tc );
@@ -154,7 +141,6 @@ namespace RemoteViewerServer {
 					tc.Close();
 					m_client_list.Remove( tc );
 					break;
-					//m_recv_callback?.Invoke( string.Format( "Receive Error : " + ex.Message ) );
 				}
 			}
 		}

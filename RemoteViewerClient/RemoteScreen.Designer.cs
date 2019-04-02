@@ -36,6 +36,7 @@
 			System.Windows.Forms.ListViewItem listViewItem4 = new System.Windows.Forms.ListViewItem(new string[] {
             "IP Address",
             "127.0.0.1"}, -1);
+			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoteScreen));
 			this.gbTitle = new System.Windows.Forms.GroupBox();
 			this.pbScreen = new System.Windows.Forms.PictureBox();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -159,6 +160,7 @@
 			this.ClientSize = new System.Drawing.Size(376, 322);
 			this.Controls.Add(this.gbTitle);
 			this.DoubleBuffered = true;
+			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "RemoteScreen";
 			this.gbTitle.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.pbScreen)).EndInit();

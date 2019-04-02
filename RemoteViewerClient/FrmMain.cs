@@ -35,6 +35,7 @@ namespace RemoteViewerClient {
 			int idx = 1;
 			foreach( var ip in ip_list ) {
 				RemoteScreen rs = new RemoteScreen();
+				rs.Text = string.Format( "Screen{0}", idx );
 				rs._IP = ip;
 				rs._PORT = 54321;
 				rs._IDX = idx++;

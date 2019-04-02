@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace RemoteViewerClient {
 	class ClientSocket {
@@ -42,31 +43,43 @@ namespace RemoteViewerClient {
 		private static void thread_proc_connect( object _obj ) {
 			try {
 				ClientSocket cs = ( ClientSocket )_obj;
+				
+				cs.m_tc = new TcpClient();
+				IAsyncResult ar = cs.m_tc.BeginConnect( cs.m_ip, cs.m_port, fnAsyncCallback, _obj );
+				cs.m_tc.EndConnect( ar );
+			} catch( Exception ex ) {
+				Console.WriteLine( ex.Message );
+			}
+		}
 
-				cs.m_tc = new TcpClient( cs.m_ip, cs.m_port );
+		static void fnAsyncCallback( IAsyncResult ar ) {
+			try {
+				ClientSocket cs = ( ClientSocket )ar.AsyncState;
+
 				if( cs.m_tc.Connected == true ) {
 					cs.m_thread_stop_flag = false;
 					cs.m_recv_thread = new Thread( new ParameterizedThreadStart( thread_proc_on_recv ) );
 					cs.m_recv_thread.Name = string.Format( "ClientSocket_RecvThread_{0}", ( ( RemoteViewerClient.RemoteScreen )cs.m_recv_callback.Target )._IDX );
 					cs.m_recv_thread.Start( cs );
 				}
-			}catch( Exception ex ) {
-				Console.WriteLine( ex.Message );
+			} catch( Exception ) {
+
 			}
 		}
 
 		public void disconnect() {
 			m_thread_stop_flag = true;
-
+			
 			if( m_tc != null ) {
 				if( m_tc.Connected == true )
 					m_tc.Client.Disconnect( false );
+				
 				m_tc.Close();
 				m_tc.Dispose();
 			}
 			m_recv_thread?.Join();
 			m_recv_thread?.Abort();
-
+			
 			m_conn_thread?.Join();
 			m_conn_thread?.Abort();
 		}
@@ -83,16 +96,18 @@ namespace RemoteViewerClient {
 			NetworkStream stream = null;
 			while( true ) {
 				try {
+					Thread.Sleep( 10 );
+
 					if( cs.m_thread_stop_flag == true )
 						break;
 
 					stream = cs.m_tc.GetStream();
 
-					if( stream.CanRead ) {
-						byte[] bytes = new byte[ 102400 ];
-						stream.Read( bytes, 0, bytes.Length );
-
-						cs.m_recv_callback?.Invoke( bytes, bytes.Length );
+					if( stream.CanRead && cs.m_tc.Connected ) {
+						byte[] bytes = new byte[ 102500 ];
+						int read_cnt = stream.Read( bytes, 0, bytes.Length );
+						if( read_cnt > 0)
+							cs.m_recv_callback?.Invoke( bytes, bytes.Length );
 					} else {
 						cs.m_tc.Close();
 						stream.Close();
