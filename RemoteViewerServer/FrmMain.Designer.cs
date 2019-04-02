@@ -25,10 +25,10 @@
 		private void InitializeComponent() {
 			this.components = new System.ComponentModel.Container();
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
-			System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem(new string[] {
+			System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem(new string[] {
             "Project Name",
             "TEST"}, -1);
-			System.Windows.Forms.ListViewItem listViewItem4 = new System.Windows.Forms.ListViewItem(new string[] {
+			System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem(new string[] {
             "Owner",
             "Tester"}, -1);
 			this.button1 = new System.Windows.Forms.Button();
@@ -44,6 +44,7 @@
 			this.contextMenuStrip_InfoGrid = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.timer1 = new System.Windows.Forms.Timer(this.components);
 			this.ContextMenuStrip_TrayIcon.SuspendLayout();
 			this.contextMenuStrip_InfoGrid.SuspendLayout();
 			this.groupBox1.SuspendLayout();
@@ -118,8 +119,8 @@
 			this.listView1.GridLines = true;
 			this.listView1.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
 			this.listView1.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem3,
-            listViewItem4});
+            listViewItem1,
+            listViewItem2});
 			this.listView1.LabelWrap = false;
 			this.listView1.Location = new System.Drawing.Point(6, 20);
 			this.listView1.MultiSelect = false;
@@ -163,6 +164,12 @@
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Information";
 			// 
+			// timer1
+			// 
+			this.timer1.Enabled = true;
+			this.timer1.Interval = 500;
+			this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+			// 
 			// FrmMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -202,6 +209,7 @@
 		private System.Windows.Forms.ContextMenuStrip contextMenuStrip_InfoGrid;
 		private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
 		private System.Windows.Forms.GroupBox groupBox1;
+		private System.Windows.Forms.Timer timer1;
 	}
 }
 

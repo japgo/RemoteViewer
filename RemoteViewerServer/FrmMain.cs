@@ -19,6 +19,7 @@ namespace RemoteViewerServer {
 		private delegate void delegate_CaptureImage( float _scale, bool _save_file = false );
 		MemoryStream m_screen_mem = new MemoryStream();
 		private static float m_scale = 0.3f;
+		private object m_lock = new object();
 
 		private int m_list_selected_idx = 0;
 		private TextBox m_edit_TextBox = new TextBox();
@@ -84,8 +85,6 @@ namespace RemoteViewerServer {
 						info.owner = listView1.Items[ 1 ].SubItems[ 1 ].Text;
 						info.img = m_screen_mem.ToArray();
 						m_server_sock.send( info.getBytes() );
-
-						CaptureImage( m_scale );
 					}
 				}
 			}catch(Exception ex ) {
@@ -101,26 +100,28 @@ namespace RemoteViewerServer {
 		}
 
 		public void CaptureImage( float _scale, bool _save_file = false ) {
-			try {
-				if( this.InvokeRequired ) {
-					var d = new delegate_CaptureImage( CaptureImage );
-					Invoke( d, _scale, _save_file );
-				} else {
-					eCaptureType type = eCaptureType.eCaptureType_Graphics;
-					switch( type ) {
-						case eCaptureType.eCaptureType_FormDrawToBitmap:
-							CaptureImage_FormDrawToBitmap( _scale, _save_file );
-							break;
-						case eCaptureType.eCaptureType_Win32_ScreenCapture:
-							CaptureImage_Win32_ScreenCapture( _scale, _save_file );
-							break;
-						case eCaptureType.eCaptureType_Graphics:
-							CaptureImage_Graphics( _scale, _save_file );
-							break;
+			lock( m_lock ) {
+				try {
+					if( this.InvokeRequired ) {
+						var d = new delegate_CaptureImage( CaptureImage );
+						Invoke( d, _scale, _save_file );
+					} else {
+						eCaptureType type = eCaptureType.eCaptureType_Graphics;
+						switch( type ) {
+							case eCaptureType.eCaptureType_FormDrawToBitmap:
+								CaptureImage_FormDrawToBitmap( _scale, _save_file );
+								break;
+							case eCaptureType.eCaptureType_Win32_ScreenCapture:
+								CaptureImage_Win32_ScreenCapture( _scale, _save_file );
+								break;
+							case eCaptureType.eCaptureType_Graphics:
+								CaptureImage_Graphics( _scale, _save_file );
+								break;
+						}
 					}
+				} catch( Exception ex ) {
+					throw ex;
 				}
-			} catch( Exception ex) {
-				throw ex;
 			}
 		}
 
@@ -217,6 +218,10 @@ namespace RemoteViewerServer {
 		}
 
 		private void timer1_Tick( object sender, EventArgs e ) {
+			try {
+				CaptureImage( m_scale );
+			} catch( Exception ) {
+			}
 		}
 
 		private void editToolStripMenuItem_Click( object sender, EventArgs e ) {
