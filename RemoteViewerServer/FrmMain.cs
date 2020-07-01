@@ -164,20 +164,27 @@ namespace RemoteViewerServer {
 		}
 
 		public void CaptureImage_Graphics( float _scale, bool _save_file = false ) {
+			Bitmap origin_bmp = null;
+			Graphics origin_grp = null;
+			Bitmap transform_bmp = null;
 			try {
-				Bitmap origin_bmp = new Bitmap( Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height );
-				Graphics origin_grp = Graphics.FromImage( origin_bmp );
+				origin_bmp = new Bitmap( Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height );
+				origin_grp = Graphics.FromImage( origin_bmp );
 				origin_grp.CopyFromScreen( new Point( 0, 0 ), new Point( 0, 0 ), new Size( Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height ) );
 
 				using( m_screen_mem = new MemoryStream() )
 				{
-					Bitmap transform_bmp = new Bitmap( origin_bmp, ( int )( Screen.PrimaryScreen.Bounds.Width * _scale ), ( int )( Screen.PrimaryScreen.Bounds.Height * _scale ) );
+					transform_bmp = new Bitmap( origin_bmp, ( int )( Screen.PrimaryScreen.Bounds.Width * _scale ), ( int )( Screen.PrimaryScreen.Bounds.Height * _scale ) );
 					transform_bmp.Save( m_screen_mem, ImageFormat.Jpeg );
 					transform_bmp.Dispose();
+					transform_bmp = null;
 				}
 					
 				origin_grp.Dispose();
+				origin_grp = null;
+				
 				origin_bmp.Dispose();
+				origin_bmp = null;
 
 				if( _save_file ) {
 					FileStream file = new FileStream( "C:\\test.jpeg", FileMode.Create );
@@ -185,6 +192,16 @@ namespace RemoteViewerServer {
 					file.Close();
 				}
 			} catch( Exception ex ) {
+
+				if( transform_bmp != null )
+					transform_bmp.Dispose();
+
+				if( origin_grp != null )
+					origin_grp.Dispose();
+
+				if( origin_bmp != null )
+					origin_bmp.Dispose();
+
 				throw ex;
 			}
 		}
