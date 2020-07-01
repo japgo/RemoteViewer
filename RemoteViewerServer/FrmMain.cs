@@ -131,8 +131,7 @@ namespace RemoteViewerServer {
 				var frm = Form.ActiveForm;
 				using( var bmp = new Bitmap( frm.Width, frm.Height ) ) {
 					frm.DrawToBitmap( bmp, new Rectangle( 0, 0, bmp.Width, bmp.Height ) );
-
-					m_screen_mem = new MemoryStream();
+					
 					Bitmap transform_bmp = new Bitmap( bmp, ( int )( bmp.Width * _scale ), ( int )( bmp.Height * _scale ) );
 					transform_bmp.Save( m_screen_mem, ImageFormat.Jpeg );
 
@@ -148,10 +147,11 @@ namespace RemoteViewerServer {
 			try {
 				ScreenCapture sc = new ScreenCapture();
 				Image img = sc.CaptureScreen();
-
-				m_screen_mem = new MemoryStream();
+				
 				Bitmap transform_bmp = new Bitmap( img, ( int )( img.Width * _scale ), ( int )( img.Height * _scale ) );
 				transform_bmp.Save( m_screen_mem, ImageFormat.Jpeg );
+
+				transform_bmp.Dispose();
 
 				if( _save_file ) {
 					FileStream file = new FileStream( "C:\\test.jpeg", FileMode.Create );
@@ -169,12 +169,15 @@ namespace RemoteViewerServer {
 				Graphics origin_grp = Graphics.FromImage( origin_bmp );
 				origin_grp.CopyFromScreen( new Point( 0, 0 ), new Point( 0, 0 ), new Size( Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height ) );
 
-				m_screen_mem = new MemoryStream();
-				Bitmap transform_bmp = new Bitmap( origin_bmp, ( int )( Screen.PrimaryScreen.Bounds.Width * _scale ), ( int )( Screen.PrimaryScreen.Bounds.Height * _scale ) );
-				transform_bmp.Save( m_screen_mem, ImageFormat.Jpeg );
-
+				using( m_screen_mem = new MemoryStream() )
+				{
+					Bitmap transform_bmp = new Bitmap( origin_bmp, ( int )( Screen.PrimaryScreen.Bounds.Width * _scale ), ( int )( Screen.PrimaryScreen.Bounds.Height * _scale ) );
+					transform_bmp.Save( m_screen_mem, ImageFormat.Jpeg );
+					transform_bmp.Dispose();
+				}
+					
 				origin_grp.Dispose();
-				origin_grp = null;
+				origin_bmp.Dispose();
 
 				if( _save_file ) {
 					FileStream file = new FileStream( "C:\\test.jpeg", FileMode.Create );
